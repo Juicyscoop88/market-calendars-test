@@ -799,7 +799,8 @@ class MarketCalendar(metaclass=MarketCalendarMeta):
             mkt_open_ind = cols.get_loc("market_open")
 
             # Can't use Lambdas here since numpy array assignment doesn't return the array.
-            def adjust_opens(x: Any) -> Any:  # x is an np.Array.
+            def adjust_opens(x: Any) -> Any:  # x is an np.Array, possibly read-only.
+                x = x.copy()
                 x[x <= x[mkt_open_ind]] = x[mkt_open_ind]
                 return x
 
@@ -810,6 +811,7 @@ class MarketCalendar(metaclass=MarketCalendarMeta):
             mkt_close_ind = cols.get_loc("market_close")
 
             def adjust_closes(x: Any) -> Any:
+                x = x.copy()
                 x[x >= x[mkt_close_ind]] = x[mkt_close_ind]
                 return x
 
