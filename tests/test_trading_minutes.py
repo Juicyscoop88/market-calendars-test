@@ -40,9 +40,8 @@ def test_trading_minutes_ignores_time_of_day_in_dates(nyse):
     assert nyse.trading_minutes("2026-11-27 15:00", "2026-11-27 01:00") == 210
 
 
-def test_trading_minutes_start_after_end_raises(nyse):
-    with pytest.raises(ValueError, match="start_date"):
-        nyse.trading_minutes("2026-11-20", "2026-11-16")
+def test_trading_minutes_start_after_end_is_zero(nyse):
+    assert nyse.trading_minutes("2026-11-20", "2026-11-16") == 0
 
 
 def test_trading_minutes_excludes_break():

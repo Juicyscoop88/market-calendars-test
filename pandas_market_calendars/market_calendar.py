@@ -1062,7 +1062,8 @@ class MarketCalendar(metaclass=MarketCalendarMeta):
         session on or before `end_date`, both included.
 
         Special opens and closes (late opens, early closes) are respected, and the time between
-        `break_start` and `break_end` is not counted. A range without any session returns 0.
+        `break_start` and `break_end` is not counted. A range without any session, or with
+        `start_date` after `end_date`, returns 0.
 
         :param start_date: first date of the range (time and time zone are ignored)
         :param end_date: last date of the range (time and time zone are ignored)
@@ -1070,9 +1071,7 @@ class MarketCalendar(metaclass=MarketCalendarMeta):
         """
         start_date, end_date = self.clean_dates(start_date, end_date)
         if start_date > end_date:
-            raise ValueError(
-                f"start_date ({start_date.date()}) must be before or equal to end_date ({end_date.date()})."
-            )
+            return 0
 
         market_times = ["market_open", "market_close"]
         has_break = "break_start" in self._market_times and "break_end" in self._market_times
