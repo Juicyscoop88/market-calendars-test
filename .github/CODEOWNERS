@@ -1,0 +1,4 @@
+# Team rules: the calendars team reviews everything, the core class needs a second senior.
+*                                   @ftmo/calendars-team
+/pandas_market_calendars/market_calendar.py  @ftmo/calendars-seniors
+/.github/                           @ftmo/platform
