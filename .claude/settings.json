@@ -1,0 +1,6 @@
+{
+  "extraKnownMarketplaces": {
+    "four-eyes": { "source": { "source": "github", "repo": "Juicyscoop88/four-eyes" } }
+  },
+  "enabledPlugins": { "four-eyes@four-eyes": true, "code-review@claude-plugins-official": true }
+}

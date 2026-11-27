@@ -2,3 +2,13 @@
 *                                   @ftmo/calendars-team
 /pandas_market_calendars/market_calendar.py  @ftmo/calendars-seniors
 /.github/                           @ftmo/platform
+
+# Four Eyes. Money tier: a wrong session time means a desk trades into a closed market.
+# Later lines win in CODEOWNERS, so the seniors stay on market_calendar.py next to the approver.
+/pandas_market_calendars/market_calendar.py   @ftmo/calendars-seniors @Juicyscoop88
+/pandas_market_calendars/calendar_utils.py    @Juicyscoop88
+/pandas_market_calendars/calendars/nyse.py    @Juicyscoop88
+/pandas_market_calendars/calendars/cme*.py    @Juicyscoop88
+# Owned by people: the factory's settings and the tests that must never break.
+/factory.yaml                       @Juicyscoop88
+/tests/protected/                   @Juicyscoop88
