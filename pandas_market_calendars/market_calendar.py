@@ -1056,6 +1056,69 @@ class MarketCalendar(metaclass=MarketCalendarMeta):
         current_time = MarketCalendar._get_current_time()
         return self.open_at_time(schedule, current_time, include_close=include_close, only_rth=only_rth)
 
+    def trading_minutes(self, start_date: Any, end_date: Any) -> int:
+        """
+        Count the minutes the market is open from the first session on or after `start_date` to the last
+        session on or before `end_date`, both included.
+
+        Special opens and closes (late opens, early closes) are respected, and the time between
+        `break_start` and `break_end` is not counted. A range without any session returns 0.
+
+        :param start_date: first date of the range (time and time zone are ignored)
+        :param end_date: last date of the range (time and time zone are ignored)
+        :return: number of open minutes as an int
+        """
+        start_date, end_date = self.clean_dates(start_date, end_date)
+        if start_date > end_date:
+            raise ValueError(f"start_date ({start_date.date()}) must be before or equal to end_date ({end_date.date()}).")
+
+        market_times = ["market_open", "market_close"]
+        has_break = "break_start" in self._market_times and "break_end" in self._market_times
+        if has_break:
+            market_times = ["market_open", "break_start", "break_end", "market_close"]
+
+        schedule = self.schedule(start_date, end_date, market_times=market_times)
+        if schedule.empty:
+            return 0
+
+        market_open, market_close = schedule["market_open"], schedule["market_close"]
+        open_time = (market_close - market_open).clip(lower=pd.Timedelta(0))
+
+        if has_break:
+            # Only the part of the break that falls inside the session is closed time, so a session that
+            # closes early before its break loses no minutes to it.
+            # A day without a break (NaT in either column) loses nothing.
+            has_break_today = schedule["break_start"].notna() & schedule["break_end"].notna()
+            break_start = schedule["break_start"].where(schedule["break_start"] > market_open, market_open)
+            break_end = schedule["break_end"].where(schedule["break_end"] < market_close, market_close)
+            break_time = (break_end - break_start).clip(lower=pd.Timedelta(0))
+            open_time = open_time - break_time.where(has_break_today, pd.Timedelta(0))
+
+        return int(open_time.sum() // pd.Timedelta(minutes=1))
+
+    def next_open(self, timestamp: Any) -> pd.Timestamp:
+        """
+        Get the next `market_open` strictly after `timestamp`, respecting late opens.
+
+        :param timestamp: the point in time to search from. Assumed to be UTC if it has no time zone.
+        :return: the next market_open, in the time zone of `timestamp` (UTC if it had none)
+        """
+        timestamp = pd.Timestamp(timestamp)
+        if timestamp.tzinfo is None:
+            timestamp = timestamp.tz_localize("UTC")
+
+        # A session can open on the calendar day before its session date (e.g. CME Globex opens the
+        # evening before), so the search starts a few days early. Widen the window until an open is found.
+        search_start = timestamp.tz_convert("UTC").tz_localize(None).normalize() - pd.Timedelta(days=7)
+        for window_days in (31, 366, 3660):
+            search_end = search_start + pd.Timedelta(days=window_days)
+            opens = self.schedule(search_start, search_end, market_times=["market_open"])["market_open"]
+            later = opens[opens > timestamp]
+            if not later.empty:
+                return later.iat[0].tz_convert(timestamp.tz)
+
+        raise ValueError(f"No market_open found within ten years after {timestamp} for calendar {self.name}.")
+
     def clean_dates(self, start_date: Any, end_date: Any) -> tuple[pd.Timestamp, pd.Timestamp]:
         """
         Strips the inputs of time and time zone information
