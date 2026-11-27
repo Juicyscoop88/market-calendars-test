@@ -1,0 +1,45 @@
+# Four Eyes: the one file per repo. What people own, and how strict the gate is per path.
+# Owned paths are changed only by their owners (CODEOWNERS approval). Agents never edit them.
+# Not owned on purpose: AGENTS.md asks agents to write plans in .github/plans/ and the change log in docs/.
+
+owned:
+  - factory.yaml
+  - .github/workflows/**          # CI: the gate itself and the team's own CI
+  - .github/CODEOWNERS            # who approves
+  - tests/protected/**            # tests people own: no agent changes them
+
+source: pandas_market_calendars   # the code the gate protects: stubbed for the tester, mutated by the gate
+test_command: python -m pytest    # what the author agent runs
+# python: not set. The setup is `pip install -e . pytest hypothesis` into the runner's own interpreter.
+
+# How things are done here. The agent gets them when it touches the paths, the reviewer checks them.
+# company: money is not named: its rules are for prices and amounts, and this library computes session times.
+standards:
+  - paths: ["**"]
+    company: basics               # company standards ship with the factory: named here, never copied
+
+suites:
+  author: tests                   # written by whoever wrote the code (measured, never counted)
+  tester: tests/blind             # written by the tester, who never saw the code
+  protected: tests/protected      # owned by people: a failing one always blocks
+
+tiers:
+  money:                          # a wrong session time means a desk trades into a closed market
+    paths:
+      - pandas_market_calendars/market_calendar.py
+      - pandas_market_calendars/calendar_utils.py
+      - pandas_market_calendars/calendars/nyse.py
+      - pandas_market_calendars/calendars/cme*.py
+    mutation_min: 0.8
+    approver: "@Juicyscoop88"     # CODEOWNERS owner who approves
+  standard:
+    paths: ["pandas_market_calendars/**"]
+    mutation_min: 0.5
+  low:
+    paths: ["**"]
+    mutation_min: 0.0
+
+agents:
+  author:   { model: sonnet, mcp: [four-eyes] }
+  tester:   { model: sonnet, mcp: [] }   # isolation does the work; the model is a cost choice
+  reviewer: { model: sonnet, mcp: [] }

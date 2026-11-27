@@ -1,0 +1,31 @@
+name: A change
+description: Say what should change and why. The factory takes it from there and comes back with questions.
+labels: [autopilot]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What should change
+      description: In your own words, as you would tell a colleague. No technical terms needed.
+      placeholder: CME equity futures should show the 15-minute pause before the daily close.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: Who needs it and what goes wrong today. This is what the factory checks the result against.
+      placeholder: The desk's order router treats the pause as open market and sends orders that get rejected.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: An example (optional)
+      description: One concrete case with dates and times, if you have one. It often becomes the first test.
+      placeholder: On 2026-03-10 the CME_Equity schedule should have a break from 16:15 to 16:30 America/Chicago.
+  - type: markdown
+    attributes:
+      value: |
+        Where you leave something open, the factory makes an assumption and shows it on the pull request.
+        You change any of them with one line, for example `/decide A3 reject it`.
