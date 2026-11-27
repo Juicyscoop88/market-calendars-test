@@ -1070,7 +1070,9 @@ class MarketCalendar(metaclass=MarketCalendarMeta):
         """
         start_date, end_date = self.clean_dates(start_date, end_date)
         if start_date > end_date:
-            raise ValueError(f"start_date ({start_date.date()}) must be before or equal to end_date ({end_date.date()}).")
+            raise ValueError(
+                f"start_date ({start_date.date()}) must be before or equal to end_date ({end_date.date()})."
+            )
 
         market_times = ["market_open", "market_close"]
         has_break = "break_start" in self._market_times and "break_end" in self._market_times
