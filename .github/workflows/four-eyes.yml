@@ -16,8 +16,8 @@ permissions:
 jobs:
   gate:
     if: github.event_name == 'pull_request'
-    uses: Juicyscoop88/four-eyes/.github/workflows/gate.yml@v0.3.18
-    with: { setup: "pip install -e . pytest hypothesis" }
+    uses: Juicyscoop88/four-eyes/.github/workflows/gate.yml@feat/pin-blind-tests
+    with: { setup: "pip install -e . pytest hypothesis", foureyes: "git+https://github.com/Juicyscoop88/four-eyes@feat/pin-blind-tests" }
     secrets: inherit   # ANTHROPIC_API_KEY for the reviewer
   autopilot:
     if: github.event_name == 'issues'
