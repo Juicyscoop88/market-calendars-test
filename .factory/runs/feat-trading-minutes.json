@@ -1,0 +1,179 @@
+{
+  "issue": "feat-trading-minutes",
+  "requested_by": "Juicyscoop88",
+  "passed": false,
+  "score": 0.0,
+  "mutants": 17,
+  "equivalent": {
+    "M2": "The result is 0 when start is after end. The only way to reach the replaced constant is the guard's own return value, and the faulty version returns 1 there. So it is not equivalent: a test with start after end must expect exactly 0, not 1.",
+    "M16": "Behaviour differs only in the type: a float vs integer division. A total of whole minutes is equal either way in value, so only a type check on the result (integer) can tell them apart. Test that the result is an integer.",
+    "M21": "The first search window is widened to larger windows when nothing is found, so one more day in its length changes the result only if an open lies exactly at the edge, which the wider fallback windows cover anyway. No input gives a different answer.",
+    "M22": "The second window is only used when the first has no open, and then it is one day longer. An open falling exactly on that extra day would be found by the third window anyway, with the same value, so the outcome is identical.",
+    "M23": "The last window is one day longer, and only changes whether an error is raised for an open exactly ten years out. This is not realistically testable on real calendars.",
+    "M5": "A calendar defines break_start and break_end together or not at all. So 'both present' and 'either present' give the same answer for every real calendar.",
+    "M8": "The lower bound is only reached for zero or negative lengths, and the change makes it 1 nanosecond instead of 0. The total is floored to whole minutes, so no input changes the result.",
+    "M9": "When the break start equals the session open, the replacement value is that same open. The result is identical either way.",
+    "M10": "When the break end equals the session close, the replacement value is that same close. The result is identical either way.",
+    "M17": "The Timedelta floor division already returns a plain integer, so wrapping it in int() changes neither the value nor the type.",
+    "M19": "The search only starts a few days earlier or later than needed and then keeps opens after the timestamp. A one-day change in the lookback gives the same first open."
+  },
+  "base": "976e2be53ea39739d888c2920f9e08bad33e235b",
+  "caught": {
+    "author": 15,
+    "tester": 0,
+    "protected": 0
+  },
+  "proposal": null,
+  "cost_usd": 0.425,
+  "minutes": 12.1,
+  "steps": [
+    {
+      "step": "decision 1: zero: return 0 for start > end, as the tester's test expects"
+    },
+    {
+      "step": "tester pins the decision, blind",
+      "role": "tester",
+      "cost_usd": 0.013577299999999999,
+      "seconds": 9.1,
+      "files": []
+    },
+    {
+      "step": "1 tests fail against the decision, the author changes the code",
+      "role": "author",
+      "cost_usd": 0.0787344,
+      "seconds": 89.4
+    },
+    {
+      "step": "round 1: 1 tests fail, back to the author"
+    },
+    {
+      "step": "fix",
+      "role": "author",
+      "cost_usd": 0.0777814,
+      "seconds": 25.3
+    },
+    {
+      "step": "round 2: score 0%, 28 faults survived",
+      "score": 0.0,
+      "survivors": 28
+    },
+    {
+      "step": "reviewer turns 28 survivors into 23 behaviors to test",
+      "role": "reviewer",
+      "cost_usd": 0.04220800000000001,
+      "seconds": 20.0,
+      "equivalent": [
+        "M2",
+        "M16",
+        "M21",
+        "M22",
+        "M23"
+      ]
+    },
+    {
+      "step": "tester adds tests, blind again",
+      "role": "tester",
+      "cost_usd": 0.0188377,
+      "seconds": 7.0,
+      "files": []
+    },
+    {
+      "step": "round 3: score 0%, 23 faults survived",
+      "score": 0.0,
+      "survivors": 23
+    },
+    {
+      "step": "reviewer turns 23 survivors into 17 behaviors to test",
+      "role": "reviewer",
+      "cost_usd": 0.062638,
+      "seconds": 33.5,
+      "equivalent": [
+        "M5",
+        "M8",
+        "M9",
+        "M10",
+        "M17",
+        "M19"
+      ]
+    },
+    {
+      "step": "tester adds tests, blind again",
+      "role": "tester",
+      "cost_usd": 0.0151206,
+      "seconds": 9.4,
+      "files": []
+    },
+    {
+      "step": "round 4: score 0%, 17 faults survived",
+      "score": 0.0,
+      "survivors": 17
+    },
+    {
+      "step": "reviewer turns 17 survivors into 17 behaviors to test",
+      "role": "reviewer",
+      "cost_usd": 0.05502800000000001,
+      "seconds": 28.8,
+      "equivalent": []
+    },
+    {
+      "step": "tester adds tests, blind again",
+      "role": "tester",
+      "cost_usd": 0.0158928,
+      "seconds": 9.4,
+      "files": []
+    },
+    {
+      "step": "gate with the reviewer: blocked",
+      "role": "reviewer",
+      "cost_usd": 0.029850500000000002,
+      "seconds": 10.4
+    }
+  ],
+  "cards": [
+    {
+      "where": "pandas_market_calendars/market_calendar.py:1097",
+      "why": "The break-overlap arithmetic (clamping break to the session, subtracting from open time) had 8 surviving faults (M11-M15, M7, M6), so only the author's own tests vouch for money-relevant minute counts on break calendars.",
+      "question": "Is the clamped-break rule right: only the part of the break inside [open, close] is subtracted, and a day with NaT break times loses nothing?",
+      "options": [
+        "keep: subtract only the in-session overlap of the break",
+        "strict: subtract the full break_start to break_end whenever both exist",
+        "other: tell me the rule for days where the session ends before the break or opens after it"
+      ],
+      "id": "1"
+    },
+    {
+      "where": "pandas_market_calendars/market_calendar.py:1079",
+      "why": "The has_break condition (`in` flipped to `not in`) survived independent tests, so whether break calendars take the break path at all is unverified. Calendars with only one of break_start or break_end are treated as having no break.",
+      "question": "Should trading_minutes subtract breaks only when both break_start and break_end are defined for the calendar?",
+      "options": [
+        "keep: both required, otherwise ignore the break",
+        "either: use the break path if either is defined and treat the missing one as the session edge",
+        "raise: raise an error for a half-defined break"
+      ],
+      "id": "2"
+    },
+    {
+      "where": "pandas_market_calendars/market_calendar.py:1119",
+      "why": "next_open's window search and the final error (M25-M28 survived, including a removed `raise` and a flipped `not`) have no independent test. Special-time handling and the ten-year limit are unverified, and a CME-style calendar whose open is the previous evening is untested.",
+      "question": "If no open is found within the search windows, should next_open raise ValueError?",
+      "options": [
+        "keep: raise ValueError after ten years",
+        "none: return NaT",
+        "shorter: raise after a shorter limit such as one year"
+      ],
+      "id": "3"
+    }
+  ],
+  "findings": [
+    {
+      "severity": "warn",
+      "where": "pandas_market_calendars/market_calendar.py:802",
+      "what": "The change to _apply_special_times (x.copy() inside adjust_opens and adjust_closes) is outside the task and affects every schedule() call using special times. The gate's 1638 passing tests cover it, but progress.md still lists test_next_open_respects_late_open as failing in this function. Confirm it passes."
+    },
+    {
+      "severity": "warn",
+      "where": "tests/test_trading_minutes.py:22",
+      "what": "The only start > end test uses NYSE with two full sessions, so the guard at line 1075 (`>` vs `>=`, M1) is unpinned for start == end on a day that has a session. A single-day range returning 0 would be wrong, and the existing early-close test covers it only through the author's own test."
+    }
+  ]
+}
